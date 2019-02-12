@@ -12,17 +12,25 @@ class HomeTableViewController: UITableViewController {
 
     
     var tweetArray = [NSDictionary]()
-    var numberofTweet: Int!
+    var numberofTweet = 0
     
     let myRefreshControl = UIRefreshControl()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        
+        
         loadTweets()
         
         myRefreshControl.addTarget(self, action: #selector(loadTweets), for: .valueChanged)
         tableView.refreshControl = myRefreshControl
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        self.loadTweets()
+        
     }
     
     @objc func loadTweets(){
@@ -42,8 +50,10 @@ class HomeTableViewController: UITableViewController {
             
             self.tableView.reloadData()
             self.myRefreshControl.endRefreshing()
-            
+                
+                
         }, failure: { (Error) in
+            print("Error:", Error)
             print("Could not retreive tweets")
         })
 
@@ -53,7 +63,7 @@ class HomeTableViewController: UITableViewController {
         
         let myUrl = "https://api.twitter.com/1.1/statuses/home_timeline.json"
         numberofTweet = numberofTweet + 20
-        let myParams = ["counts": numberofTweet]
+        let myParams = ["count": numberofTweet]
         
         TwitterAPICaller.client?.getDictionariesRequest(url: myUrl, parameters: myParams, success: { (tweets: [NSDictionary]) in
             
@@ -106,6 +116,25 @@ class HomeTableViewController: UITableViewController {
         if let imageData = data {
             cell.profilemageView.image = UIImage(data: imageData)
         }
+        
+        cell.setFavorite(tweetArray[indexPath.row]["favorited"] as! Bool)
+        
+        cell.tweetId = tweetArray[indexPath.row]["id"] as! Int
+        cell.setRetweeted(tweetArray[indexPath.row]["retweeted"] as! Bool)
+        
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "hh_mm"
+        let currentDate =  (formatter.string(from: Date()) as NSString) as String
+        
+        let currentHour = currentDate.prefix(2)
+//        let currentMinute =
+        
+        let date = user["created_at"] as! String
+        let tweetHour = date.prefix(13).suffix(2)
+        let tweetMinute = date.prefix(16).suffix(2)
+        
+        
         return cell
     }
     
